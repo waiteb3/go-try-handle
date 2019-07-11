@@ -409,6 +409,12 @@ type (
 		Rbrace Pos
 		stmt
 	}
+
+	TryStmt struct {
+		Body   *BlockStmt
+		Handle *BlockStmt
+		stmt
+	}
 )
 
 type (

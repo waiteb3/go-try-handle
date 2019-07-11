@@ -7,12 +7,14 @@ package syntax
 import (
 	"fmt"
 	"io"
+	"os"
+	d "runtime/debug"
 	"strconv"
 	"strings"
 )
 
 const debug = false
-const trace = false
+const trace = true
 
 type parser struct {
 	file *PosBase
@@ -451,7 +453,8 @@ func (p *parser) list(open, sep, close token, f func() bool) Pos {
 		done = f()
 		// sep is optional before close
 		if !p.got(sep) && p.tok != close {
-			p.syntaxError(fmt.Sprintf("expecting %s or %s", tokstring(sep), tokstring(close)))
+			stack := string(d.Stack())
+			p.syntaxError(fmt.Sprintf("expecting %s or %s at %v", tokstring(sep), tokstring(close), stack))
 			p.advance(_Rparen, _Rbrack, _Rbrace)
 			if p.tok != close {
 				// position could be better but we had an error so we don't care
@@ -2032,11 +2035,22 @@ func (p *parser) commClause() *CommClause {
 	return c
 }
 
+var logfile *os.File
+
+func init() {
+	var err error
+	logfile, err = os.Create("/tmp/compiler.log")
+	if err != nil {
+		panic(err)
+	}
+	logfile.WriteString("Test\n")
+}
+
 // Statement =
 // 	Declaration | LabeledStmt | SimpleStmt |
 // 	GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt |
 // 	FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt |
-// 	DeferStmt .
+// 	DeferStmt | TryStmt.
 func (p *parser) stmtOrNil() Stmt {
 	if trace {
 		defer p.trace("stmt " + p.tok.String())()
@@ -2129,52 +2143,64 @@ func (p *parser) stmtOrNil() Stmt {
 		s := new(EmptyStmt)
 		s.pos = p.pos()
 		return s
-	
+
 	case _Try:
 		return p.tryStmt()
-
-	case _Handle:
-		return p.handleStmt()
 	}
 
 	return nil
 }
 
-type TryStmt struct {
-
-}
-
-func (p *parser) tryStmt() Stmt {
+func (p *parser) tryStmt() *TryStmt {
 	if trace {
 		defer p.trace("tryStmt")()
 	}
 
 	s := new(TryStmt)
 	s.pos = p.pos()
-	
-	s.Init, s.Cond, _ = p.header(_Try)
-	s.Body = p.blockStmt("try clause")
-	// rewrite here?
-	
-	return s
-}
 
-type HandleStmt struct {
+	// s.Init, s.Cond, _ = p.header(_If)
+	// s.Then = p.blockStmt("if clause")
+	Fdump(logfile, s)
+	p.header(_Try)
+	Fdump(logfile, s)
+	s.Body = p.blockStmt("try block")
+	Fdump(logfile, s)
 
-}
+	// if !p.got(_Lbrace) {
+	// 	p.syntaxError("missing { on try block")
+	// 	p.advance(_Name, _Lbrace)
+	// 	return s
+	// }
 
-func (p *parser) handleStmt() Stmt {
-	if trace {
-		defer p.trace("handleStmt")()
+	// if p.got(_Else) {
+	// 	switch p.tok {
+	// 	case _If:
+	// 		s.Else = p.tryStmt()
+	// 	case _Lbrace:
+	// 		s.Else = p.blockStmt("")
+	// 	default:
+	// 		p.syntaxError("else must be followed by if or statement block")
+	// 		p.advance(_Name, _Rbrace)
+	// 	}
+	// }
+	if !p.got(_Handle) {
+		p.syntaxError("try block must be followed by a handle block")
+		p.advance(_Name, _Rbrace)
+		return s
 	}
 
-	s := new(HandleStmt)
-	s.pos = p.pos()
+	switch p.tok {
+	case _Lbrace:
+		s.Handle = p.blockStmt("handle block")
+		Fdump(logfile, s)
+		panic("TBD1")
+	default:
+		Fdump(logfile, s)
+		panic("TBD2")
+	}
 
-	// parse for err var
-	s.Init, s.Cond, _ = p.header(_Handle)
-	s.Body = p.blockStmt("handle clause")
-
+	// TODO rewrite stuff here?
 	return s
 }
 
