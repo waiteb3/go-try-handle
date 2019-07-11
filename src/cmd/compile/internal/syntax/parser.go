@@ -2129,9 +2129,53 @@ func (p *parser) stmtOrNil() Stmt {
 		s := new(EmptyStmt)
 		s.pos = p.pos()
 		return s
+	
+	case _Try:
+		return p.tryStmt()
+
+	case _Handle:
+		return p.handleStmt()
 	}
 
 	return nil
+}
+
+type TryStmt struct {
+
+}
+
+func (p *parser) tryStmt() Stmt {
+	if trace {
+		defer p.trace("tryStmt")()
+	}
+
+	s := new(TryStmt)
+	s.pos = p.pos()
+	
+	s.Init, s.Cond, _ = p.header(_Try)
+	s.Body = p.blockStmt("try clause")
+	// rewrite here?
+	
+	return s
+}
+
+type HandleStmt struct {
+
+}
+
+func (p *parser) handleStmt() Stmt {
+	if trace {
+		defer p.trace("handleStmt")()
+	}
+
+	s := new(HandleStmt)
+	s.pos = p.pos()
+
+	// parse for err var
+	s.Init, s.Cond, _ = p.header(_Handle)
+	s.Body = p.blockStmt("handle clause")
+
+	return s
 }
 
 // StatementList = { Statement ";" } .
