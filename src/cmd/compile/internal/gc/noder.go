@@ -1031,6 +1031,8 @@ func (p *noder) stmtFall(stmt syntax.Stmt, fallOK bool) *Node {
 		return p.switchStmt(stmt)
 	case *syntax.SelectStmt:
 		return p.selectStmt(stmt)
+	case *syntax.TryStmt:
+		return p.tryStmt(stmt)
 	}
 	panic("unhandled Stmt")
 }
@@ -1226,6 +1228,26 @@ func (p *noder) caseClauses(clauses []*syntax.CaseClause, tswitch *Node, rbrace 
 func (p *noder) selectStmt(stmt *syntax.SelectStmt) *Node {
 	n := p.nod(stmt, OSELECT, nil, nil)
 	n.List.Set(p.commClauses(stmt.Body, stmt.Rbrace))
+	return n
+}
+
+var logfile *os.File
+
+func init() {
+	var err error
+	logfile, err = os.OpenFile("/tmp/compiler.log", os.O_APPEND|os.O_RDWR, 0)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (p *noder) tryStmt(stmt *syntax.TryStmt) *Node {
+	p.openScope(stmt.Pos()) // TODO maybe not open scope here?
+	var n *Node
+	n = p.nod(stmt, OTRYX, nil, nil)
+	n.Nbody.Set(append(p.blockStmt(stmt.Body), p.blockStmt(stmt.HandleBlock)...))
+	fdump(logfile, n, "", 0)
+	p.closeAnotherScope()
 	return n
 }
 

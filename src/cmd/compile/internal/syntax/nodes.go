@@ -412,7 +412,7 @@ type (
 
 	TryStmt struct {
 		Body   *BlockStmt
-		Handle *BlockStmt
+		HandleBlock *BlockStmt
 		stmt
 	}
 )

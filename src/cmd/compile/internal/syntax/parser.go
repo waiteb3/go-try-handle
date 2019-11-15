@@ -14,7 +14,7 @@ import (
 )
 
 const debug = false
-const trace = true
+const trace = false
 
 type parser struct {
 	file *PosBase
@@ -2190,14 +2190,29 @@ func (p *parser) tryStmt() *TryStmt {
 		return s
 	}
 
+	// build the error
+	errType := new(Name)
+	errType.pos = p.pos()
+	errType.Value = "error"
+
+	errDecl := new(VarDecl)
+	errDecl.pos = p.pos()
+	errDecl.NameList = p.nameList(p.name())
+	errDecl.Type = errType
+
+	errStmt := new(DeclStmt)
+	errStmt.DeclList = []Decl{errDecl}
+	s.Body.List = append([]Stmt{errStmt}, s.Body.List...)
+
 	switch p.tok {
 	case _Lbrace:
-		s.Handle = p.blockStmt("handle block")
+		s.HandleBlock = p.blockStmt("handle block")
+		fmt.Fprintln(logfile, "----lbrace---", p.tok.String())
 		Fdump(logfile, s)
-		panic("TBD1")
 	default:
+		fmt.Fprintln(logfile, "----not lbrace---", p.tok.String())
 		Fdump(logfile, s)
-		panic("TBD2")
+		panic("TBD2 " + p.tok.String())
 	}
 
 	// TODO rewrite stuff here?

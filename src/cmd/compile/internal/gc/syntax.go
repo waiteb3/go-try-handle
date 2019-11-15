@@ -720,15 +720,17 @@ const (
 	// 	}
 	// OFORUNTIL is created by walk. There's no way to write this in Go code.
 	OFORUNTIL
-	OGOTO   // goto Sym
-	OIF     // if Ninit; Left { Nbody } else { Rlist }
-	OLABEL  // Sym:
-	OGO     // go Left (Left must be call)
-	ORANGE  // for List = range Right { Nbody }
-	ORETURN // return List
-	OSELECT // select { List } (List is list of OXCASE or OCASE)
-	OSWITCH // switch Ninit; Left { List } (List is a list of OXCASE or OCASE)
-	OTYPESW // Left = Right.(type) (appears as .Left of OSWITCH)
+	OGOTO    // goto Sym
+	OIF      // if Ninit; Left { Nbody } else { Rlist }
+	OLABEL   // Sym:
+	OGO      // go Left (Left must be call)
+	ORANGE   // for List = range Right { Nbody }
+	ORETURN  // return List
+	OSELECT  // select { List } (List is list of OXCASE or OCASE)
+	OSWITCH  // switch Ninit; Left { List } (List is a list of OXCASE or OCASE)
+	OTYPESW  // Left = Right.(type) (appears as .Left of OSWITCH)
+	OTRYX    // tryx { List } (block of code)
+	OHANDLEX // handlex name { List } (block of code)
 
 	// types
 	OTCHAN   // chan int

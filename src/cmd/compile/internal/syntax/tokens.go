@@ -64,9 +64,9 @@ const (
 	_Struct      // struct
 	_Switch      // switch
 	_Type        // type
+	_Try         // tryx
+	_Handle      // handlex
 	_Var         // var
-	_Try         // try
-	_Handle      // handle
 
 	// empty line comment to exclude it from .String
 	tokenCount //

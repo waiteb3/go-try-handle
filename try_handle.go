@@ -8,10 +8,10 @@ import (
 )
 
 func main() {
-    try {
+    tryx {
         bytes := ioutil.ReadFile("try_handle.go")
         _ = fmt.Println(string(bytes))
-    } handle err {
+    } handlex err {
         fmt.Println("ERR1", err)
         return
     }
@@ -47,4 +47,4 @@ func main() {
 //         fmt.Println("ERR2", err)
 //         return
 //     }
-// }
+}
